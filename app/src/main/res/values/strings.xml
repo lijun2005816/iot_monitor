@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Iot Monitor</string>
+    <string name="btn_export">导出</string>
+    <string name="btn_zoom_in">放大</string>
+    <string name="btn_zoom_out">缩小</string>
+    <string name="btn_origin">恢复</string>
+    <string name="btn_refresh">刷新</string>
 </resources>
