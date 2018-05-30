@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         Intent monitor = new Intent(this, MonitorService.class);
         startService(monitor);
         // start deviceservice
-        Intent device = new Intent(this, DeviceService.class);
+        //Intent device = new Intent(this, DeviceService.class);
         //startService(device);
         // register broadcast
         IntentFilter filterMonitor = new IntentFilter(MonitorService.action);

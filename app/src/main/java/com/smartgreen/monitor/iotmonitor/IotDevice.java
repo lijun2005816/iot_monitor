@@ -13,6 +13,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Random;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
@@ -20,38 +21,40 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class IotDevice {
     private String TAG = "IotDevice";
-    private IotProduct Product;
-    private String Name;
-    private String Secret;
+    private String ProductKey;
+    private String ProductSecret;
+    private String DeviceName;
+    private String DeviceSecret;
     private String TopicGet;
     private String TopicUpdate;
 
-    IotDevice(IotProduct product, String deviceName, String deviceSecret) {
-        Product = product;
-        Name = deviceName;
-        Secret = deviceSecret;
-        TopicGet = String.format("/%s/%s/get", Product.getKey(), Name);
-        TopicUpdate = String.format("/%s/%s/update", Product.getKey(), Name);
-        if (Secret == null || Secret.trim().length() == 0) {
-            try {
-                Secret = initDeviceSecret();
-            } catch (InvalidKeyException | NoSuchAlgorithmException | IOException | JSONException e) {
-                e.printStackTrace();
-            }
+    IotDevice(String productKey, String productSecret, String deviceName, String deviceSecret) {
+        ProductKey = productKey;
+        ProductSecret = productSecret;
+        DeviceName = deviceName;
+        DeviceSecret = deviceSecret;
+        TopicGet = String.format("/%s/%s/get", ProductKey, DeviceName);
+        TopicUpdate = String.format("/%s/%s/update", ProductKey, DeviceName);
+        if (DeviceSecret == null || DeviceSecret.trim().length() == 0) {
+            initDeviceSecret();
         }
         Log.i(TAG, this.toString());
     }
 
-    public IotProduct getProduct() {
-        return Product;
+    public String getProductKey() {
+        return ProductKey;
     }
 
-    public String getName() {
-        return Name;
+    public String getProductSecret() {
+        return ProductSecret;
     }
 
-    public String getSecret() {
-        return Secret;
+    public String getDeviceName() {
+        return DeviceName;
+    }
+
+    public String getDeviceSecret() {
+        return DeviceSecret;
     }
 
     public String getTopicGet() {
@@ -63,27 +66,30 @@ public class IotDevice {
     }
 
     public String toString() {
-        return String.format("%s:[%s:%s]", Product.toString(), Name, Secret);
+        return String.format("[%s:%s][%s:%s]", ProductKey, ProductSecret, DeviceName, DeviceSecret);
     }
 
-    private String initDeviceSecret() throws InvalidKeyException, NoSuchAlgorithmException, IOException, JSONException {
-        String url = "https://iot-auth.cn-shanghai.aliyuncs.com/auth/register/device";
-        String random = "567345";
-        String signMethod = "hmacsha1";
-        String signStr = String.format("deviceName%sproductKey%srandom%s", Name, Product.getKey(), random);
-        String sign = sign(signStr, Product.getSecret(), signMethod);
-        String params = String.format("deviceName=%s&productKey=%s&random=%s&sign=%s&signMethod=%s", Name, Product.getKey(), random, sign, signMethod);
-        String responses = httpSendPost(url, params);
-        JSONObject json = new JSONObject(responses);
-        String labelLevel1 = "data";
-        String labelLevel2 = "deviceSecret";
-        if (json.has(labelLevel1)) {
-            JSONObject data = (JSONObject) json.get(labelLevel1);
-            if (data.has(labelLevel2)) {
-                Secret = data.get(labelLevel2).toString();
+    private void initDeviceSecret() {
+        try {
+            String url = "https://iot-auth.cn-shanghai.aliyuncs.com/auth/register/device";
+            int random = new Random().nextInt(1000000);
+            String signMethod = "hmacsha1";
+            String signStr = String.format("deviceName%sproductKey%srandom%s", DeviceName, ProductKey, random);
+            String sign = sign(signStr, ProductSecret, signMethod);
+            String params = String.format("deviceName=%s&productKey=%s&random=%s&sign=%s&signMethod=%s", DeviceName, ProductKey, random, sign, signMethod);
+            String responses = httpSendPost(url, params);
+            JSONObject json = new JSONObject(responses);
+            String labelLevel1 = "data";
+            String labelLevel2 = "deviceSecret";
+            if (json.has(labelLevel1)) {
+                JSONObject data = (JSONObject) json.get(labelLevel1);
+                if (data.has(labelLevel2)) {
+                    DeviceSecret = data.get(labelLevel2).toString();
+                }
             }
+        } catch (InvalidKeyException | NoSuchAlgorithmException | IOException | JSONException e) {
+            e.printStackTrace();
         }
-        return Secret;
     }
 
     private String sign(String content, String key, String signMethod) throws NoSuchAlgorithmException, InvalidKeyException {

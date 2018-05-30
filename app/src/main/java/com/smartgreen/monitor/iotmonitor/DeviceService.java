@@ -42,7 +42,7 @@ public class DeviceService extends Service {
                 String mDeviceName = setting.getString("devicename", "device_000001");
                 String mDeviceSecret = setting.getString("devicesecret", "");
                 Log.i(TAG, String.format("%s:%s:%s:%s", mProductKey, mProductSecret, mDeviceName, mDeviceSecret));
-                Client = new IotConnectManager(new IotDevice(new IotProduct(mProductKey, mProductSecret), mDeviceName, mDeviceSecret), DeviceService.this);
+                Client = new IotConnectManager(new IotDevice(mProductKey, mProductSecret, mDeviceName, mDeviceSecret), DeviceService.this);
                 SharedPreferences.Editor editor = setting.edit();
                 editor.putString("devicesecret", Client.getDeviceSecret()).apply();
                 Log.i(TAG, String.format("%s:%s:%s:%s", mProductKey, mProductSecret, mDeviceName, mDeviceSecret));

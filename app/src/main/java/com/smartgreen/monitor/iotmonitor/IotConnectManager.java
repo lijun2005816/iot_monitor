@@ -86,7 +86,7 @@ public class IotConnectManager {
 
     IotConnectManager(IotDevice device, Service service) {
         Device = device;
-        MqttInitParams initParams = new MqttInitParams(Device.getProduct().getKey(), Device.getName(), Device.getSecret());
+        MqttInitParams initParams = new MqttInitParams(Device.getProductKey(), Device.getDeviceName(), Device.getDeviceSecret());
         PersistentNet.getInstance().init(service, initParams);
         PersistentInitParams init = new PersistentInitParams();
         PersistentEventDispatcher.getInstance().registerOnTunnelStateListener(connectionStateListener, true);
@@ -95,14 +95,14 @@ public class IotConnectManager {
     IotConnectManager(IotDevice device, Service service, IOnPushListener push) {
         Device = device;
         onPushListener = push;
-        MqttInitParams initParams = new MqttInitParams(Device.getProduct().getKey(), Device.getName(), Device.getSecret());
+        MqttInitParams initParams = new MqttInitParams(Device.getProductKey(), Device.getDeviceName(), Device.getDeviceSecret());
         PersistentNet.getInstance().init(service, initParams);
         PersistentInitParams init = new PersistentInitParams();
         PersistentEventDispatcher.getInstance().registerOnTunnelStateListener(connectionStateListener, true);
     }
 
     public String getDeviceSecret() {
-        return Device.getSecret();
+        return Device.getDeviceSecret();
     }
 
     public void TopicSend(String payload) {

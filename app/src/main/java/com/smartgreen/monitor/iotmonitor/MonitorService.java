@@ -10,15 +10,15 @@ import android.util.Log;
 import com.aliyun.alink.linksdk.channel.core.persistent.event.IOnPushListener;
 
 public class MonitorService extends Service {
-    public static String action = "monitor.broadcast.action";
     private String TAG = "MonitorService";
+    public static String action = "monitor.broadcast.action";
     private IotConnectManager Client;
     private IOnPushListener onPushListener = new IOnPushListener() {
         public void onCommand(String topic, String data) {
             Intent intent = new Intent(action);
             intent.putExtra("data", data);
             sendBroadcast(intent);
-            Log.i(TAG, String.format("push message success [%s:%s]", topic, data));
+            Log.i(TAG, String.format("message [%s:%s] arrived", topic, data));
         }
 
         public boolean shouldHandle(String topic) {
@@ -38,10 +38,10 @@ public class MonitorService extends Service {
                 String mDeviceName = setting.getString("devicenamemonitor", "device_000000");
                 String mDeviceSecret = setting.getString("devicesecretmonitor", "");
                 Log.i(TAG, String.format("%s:%s:%s:%s", mProductKey, mProductSecret, mDeviceName, mDeviceSecret));
-                Client = new IotConnectManager(new IotDevice(new IotProduct(mProductKey, mProductSecret), mDeviceName, mDeviceSecret), MonitorService.this, onPushListener);
+                Client = new IotConnectManager(new IotDevice(mProductKey, mProductSecret, mDeviceName, mDeviceSecret), MonitorService.this, onPushListener);
                 SharedPreferences.Editor editor = setting.edit();
                 editor.putString("devicesecretmonitor", Client.getDeviceSecret()).apply();
-                Log.i(TAG, String.format("%s:%s:%s:%s", mProductKey, mProductSecret, mDeviceName, mDeviceSecret));
+                Log.i(TAG, String.format("%s:%s:%s:%s", mProductKey, mProductSecret, mDeviceName, Client.getDeviceSecret()));
             }
         }.start();
     }
