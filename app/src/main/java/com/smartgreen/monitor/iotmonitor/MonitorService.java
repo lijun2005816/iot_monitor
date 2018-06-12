@@ -3,16 +3,35 @@ package com.smartgreen.monitor.iotmonitor;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.aliyun.alink.linksdk.channel.core.persistent.event.IOnPushListener;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class MonitorService extends Service {
     private String TAG = "MonitorService";
     public static String action = "monitor.broadcast.action";
     private IotConnectManager Client;
+    private int mDelayMillis = 2000;
+    private Handler handlerRepeat = new Handler();
+    private Runnable runnableRepeat = new Runnable() {
+        @Override
+        public void run() {
+            JSONObject json = new JSONObject();
+            try {
+                json.put("value", Math.random()*100);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Client.TopicSend(json.toString());
+            handlerRepeat.postDelayed(this, mDelayMillis);
+        }
+    };
     private IOnPushListener onPushListener = new IOnPushListener() {
         public void onCommand(String topic, String data) {
             Intent intent = new Intent(action);
@@ -36,18 +55,20 @@ public class MonitorService extends Service {
                 String mProductKey = setting.getString("productkeymonitor", "a12tTqAYnlp");
                 String mProductSecret = setting.getString("productsecretmonitor", "aNBXcXkGuyFrn8aU");
                 String mDeviceName = setting.getString("devicenamemonitor", "device_000000");
-                String mDeviceSecret = setting.getString("devicesecretmonitor", "");
+                String mDeviceSecret = setting.getString("devicesecretmonitor", "lAgURk1cR0pqG333sl1BrhJUsoLtKq7M");
                 Log.i(TAG, String.format("%s:%s:%s:%s", mProductKey, mProductSecret, mDeviceName, mDeviceSecret));
                 Client = new IotConnectManager(new IotDevice(mProductKey, mProductSecret, mDeviceName, mDeviceSecret), MonitorService.this, onPushListener);
                 SharedPreferences.Editor editor = setting.edit();
                 editor.putString("devicesecretmonitor", Client.getDeviceSecret()).apply();
                 Log.i(TAG, String.format("%s:%s:%s:%s", mProductKey, mProductSecret, mDeviceName, Client.getDeviceSecret()));
+                handlerRepeat.postDelayed(runnableRepeat, mDelayMillis);
             }
         }.start();
     }
 
     @Override
     public void onDestroy() {
+        handlerRepeat.removeCallbacks(runnableRepeat);
         super.onDestroy();
     }
 

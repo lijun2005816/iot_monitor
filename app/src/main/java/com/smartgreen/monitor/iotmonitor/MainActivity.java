@@ -11,23 +11,16 @@ import android.view.View;
 import android.view.WindowManager;
 
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.data.LineData;
-import com.github.mikephil.charting.data.LineDataSet;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
     private String TAG = "MainActivity";
-    private LineChart mLineChart;
-    private LineDataSet mLineDataSet;
-    private LineData mLineData;
-    private int mMaxNum = 25;
+    private LineChartManager mLineChartManager;
+
     BroadcastReceiver broadcastReceiverMonitor = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -36,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 json = new JSONObject(data);
                 if (json.has("value")) {
-                    addEntry(Float.valueOf(json.getString("value")));
+                    mLineChartManager.addEntry(Float.valueOf(json.getString("value")));
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -52,40 +45,32 @@ public class MainActivity extends AppCompatActivity {
         // start monitorrvice
         Intent monitor = new Intent(this, MonitorService.class);
         startService(monitor);
-        // start deviceservice
-        //Intent device = new Intent(this, DeviceService.class);
-        //startService(device);
         // register broadcast
         IntentFilter filterMonitor = new IntentFilter(MonitorService.action);
         registerReceiver(broadcastReceiverMonitor, filterMonitor);
         //keep screen on
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //get linechart
-        mLineChart = findViewById(R.id.lineChart);
-        initLineChart();
+        LineChart lineChart = findViewById(R.id.lineChart);
+        mLineChartManager = new LineChartManager(lineChart);
     }
 
-    private void initLineChart() {
-        mLineChart.setDrawBorders(true);
-        List<Entry> entries = new ArrayList<>();
-        for (int i = 0; i < mMaxNum; i++) {
-            entries.add(new Entry(i, (float) (Math.random())));
-        }
-        mLineDataSet = new LineDataSet(entries, "温度");
-        mLineData = new LineData(mLineDataSet);
-        mLineChart.setData(mLineData);
+    public void onBtnZoomInClick(View view){
+        mLineChartManager.ZoomView(0.5f);
     }
 
-    public void onBtnRefreshClick(View view) {
-        addEntry((float) (Math.random()));
+    public void onBtnZoomOutClick(View view){
+        mLineChartManager.ZoomView(2f);
     }
 
-    private void addEntry(float data) {
-        Entry entry = new Entry(mLineDataSet.getEntryCount(), data);
-        mLineData.addEntry(entry, 0);
-        mLineData.notifyDataChanged();
-        mLineChart.notifyDataSetChanged();
-        mLineChart.setVisibleXRangeMaximum(mMaxNum);
-        mLineChart.moveViewToX(mLineData.getEntryCount() - 5);
+    public void onBtnOriginClick(View view){
+        mLineChartManager.OriginView();
+    }
+
+    public void onBtnExportClick(View view) {
+        //IotTableStore.getRange("1527948032000000", "1528034432000000");
+    }
+
+    public void onBtnMoreClick(View view) {
     }
 }
