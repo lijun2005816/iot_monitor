@@ -16,20 +16,24 @@ import org.json.JSONObject;
 public class MonitorService extends Service {
     private String TAG = "MonitorService";
     public static String action = "monitor.broadcast.action";
-    private IotConnectManager Client;
+    private IotConnectManager Client = null;
     private int mDelayMillis = 2000;
     private Handler handlerRepeat = new Handler();
     private Runnable runnableRepeat = new Runnable() {
         @Override
         public void run() {
-            JSONObject json = new JSONObject();
             try {
-                json.put("value", Math.random()*100);
+                JSONObject json = new JSONObject();
+                int mChNum = 8;
+                for (int i = 0; i < mChNum; i++) {
+                    float value = Double.valueOf(Math.random()*1000).intValue() * 1.0f / 10f;
+                    json.put(String.format("CH%s", i + 1), value);
+                }
+                Client.TopicSend(json.toString());
+                handlerRepeat.postDelayed(this, mDelayMillis);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            Client.TopicSend(json.toString());
-            handlerRepeat.postDelayed(this, mDelayMillis);
         }
     };
     private IOnPushListener onPushListener = new IOnPushListener() {
